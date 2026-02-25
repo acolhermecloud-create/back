@@ -94,12 +94,12 @@ namespace API
                         {
                             builder.WithOrigins(
                                 "http://localhost:3000", "http://localhost:3001", "http://localhost:3002",
-                                "https://front-a01031611408-350ac0a9fb2c.herokuapp.com"
+                                "https://front-a01031611408.vercel.app"
                             );
                         }
                         else if (envEnvironment == "Production")
                         {
-                            builder.WithOrigins("https://front-a01031611408-350ac0a9fb2c.herokuapp.com");
+                            builder.WithOrigins("https://front-a01031611408.vercel.app");
                         }
 
                         builder.AllowAnyMethod().AllowAnyHeader();
