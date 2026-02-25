@@ -94,12 +94,12 @@ namespace API
                         {
                             builder.WithOrigins(
                                 "http://localhost:3000", "http://localhost:3001", "http://localhost:3002",
-                                "https://kaixinha-frontend-ten.vercel.app", "https://kaixinha-admin-frontend.vercel.app"
+                                "https://front-a01031611408-350ac0a9fb2c.herokuapp.com"
                             );
                         }
                         else if (envEnvironment == "Production")
-                        { 
-                            builder.WithOrigins("https://kaixinha.io", "https://www.kaixinha.io", "https://admin.kaixinha.io");
+                        {
+                            builder.WithOrigins("https://front-a01031611408-350ac0a9fb2c.herokuapp.com");
                         }
 
                         builder.AllowAnyMethod().AllowAnyHeader();
@@ -259,11 +259,8 @@ namespace API
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment() || envEnvironment == "PreRelease")
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseCors("AllowSpecificOrigin");
 
