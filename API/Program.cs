@@ -99,7 +99,7 @@ namespace API
                         }
                         else if (envEnvironment == "Production")
                         {
-                            builder.WithOrigins("https://front-a01031611408.vercel.app", "https://acolher.io", "https://www.acolher.io");
+                            builder.WithOrigins("https://front-a01031611408.vercel.app", "https://admin-a01031611408.vercel.app", "https://acolher.io", "https://www.acolher.io");
                         }
 
                         builder.AllowAnyMethod().AllowAnyHeader();
