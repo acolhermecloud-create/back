@@ -1,5 +1,4 @@
-﻿using Amazon;
-using Amazon.Runtime;
+﻿using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
@@ -12,61 +11,71 @@ namespace Service
     public class S3Service : IS3Service
     {
         private readonly IConfiguration _configuration;
+        private readonly AmazonS3Client _s3Client;
 
-        public S3Service(
-            IConfiguration configuration)
+        public S3Service(IConfiguration configuration)
         {
             _configuration = configuration;
+
+            var credentials = new BasicAWSCredentials(
+                _configuration["S3:KEY_ACCESS_1"],
+                _configuration["S3:KEY_ACCESS_2"]
+            );
+
+            var config = new AmazonS3Config
+            {
+                ServiceURL = _configuration["S3:ENDPOINT"], // 👈 URL do MinIO
+                ForcePathStyle = true,                      // 👈 obrigatório pro MinIO
+                UseHttp = true                              // 👈 true se não tiver SSL
+            };
+
+            _s3Client = new AmazonS3Client(credentials, config);
         }
 
         public async Task<string> GetFileUrlByFileNameKey(string fileNameKey)
         {
-            var credentials = new BasicAWSCredentials(_configuration["S3:KEY_ACCESS_1"], _configuration["S3:KEY_ACCESS_2"]);
-            var s3Client = new AmazonS3Client(credentials, RegionEndpoint.SAEast1);
-
-            var preSignedRequest = new GetPreSignedUrlRequest
+            var request = new GetPreSignedUrlRequest
             {
                 BucketName = _configuration["S3:BUCKET_NAME"],
                 Key = fileNameKey,
-                Expires = DateTime.Now.AddDays(1),
+                Expires = DateTime.UtcNow.AddDays(1),
                 Verb = HttpVerb.GET
             };
 
-            var objectUrl = s3Client.GetPreSignedURL(preSignedRequest);
-
-            return objectUrl;
+            return _s3Client.GetPreSignedURL(request);
         }
 
         public async Task<string> SendStreamFileToS3(Stream stream, string extension)
         {
-            var credentials = new BasicAWSCredentials(
-                   _configuration["S3:KEY_ACCESS_1"], _configuration["S3:KEY_ACCESS_2"]);
-
-            var s3Client = new AmazonS3Client(credentials, RegionEndpoint.SAEast1);
             var bucketName = _configuration["S3:BUCKET_NAME"];
 
-            TransferUtility fileTransferUtility = new(s3Client);
+            var transferUtility = new TransferUtility(_s3Client);
 
-            string timestamp = Functions.GenerateTimeStampStrUnique().Replace(",", "").Replace(".", "");
+            string timestamp = Functions.GenerateTimeStampStrUnique()
+                .Replace(",", "")
+                .Replace(".", "");
+
             string filenameKey = $"{timestamp}{extension}";
 
             var request = new TransferUtilityUploadRequest
             {
                 InputStream = stream,
                 BucketName = bucketName,
-                Key = filenameKey
+                Key = filenameKey,
+                ContentType = "application/octet-stream"
             };
-            await fileTransferUtility.UploadAsync(request);
+
+            await transferUtility.UploadAsync(request);
 
             return filenameKey;
         }
 
         public async Task DeleteFileByFileNameKey(string fileNameKey)
         {
-            var credentials = new BasicAWSCredentials(_configuration["S3:KEY_ACCESS_1"], _configuration["S3:KEY_ACCESS_2"]);
-            var s3Client = new AmazonS3Client(credentials, RegionEndpoint.SAEast1);
-
-            await s3Client.DeleteObjectAsync(_configuration["S3:BUCKET_NAME"], fileNameKey);
+            await _s3Client.DeleteObjectAsync(
+                _configuration["S3:BUCKET_NAME"],
+                fileNameKey
+            );
         }
     }
 }
