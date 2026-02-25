@@ -19,7 +19,7 @@ namespace Domain
         public string OrderId { get; set; }
 
         [JsonPropertyName("platform")]
-        public string Platform { get; set; } = "Kaixinha";
+        public string Platform { get; set; } = "Acolher";
 
         [JsonPropertyName("paymentMethod")]
         public string PaymentMethod { get; set; } = "pix";
@@ -103,28 +103,33 @@ namespace Domain
         public string? Sck { get; set; }
 
         [JsonPropertyName("utm_source")]
-        public string UtmSource { get; set; }
+        public string? UtmSource { get; set; }
 
         [JsonPropertyName("utm_campaign")]
-        public string UtmCampaign { get; set; }
+        public string? UtmCampaign { get; set; }
 
         [JsonPropertyName("utm_medium")]
-        public string UtmMedium { get; set; }
+        public string? UtmMedium { get; set; }
 
         [JsonPropertyName("utm_content")]
-        public string UtmContent { get; set; }
+        public string? UtmContent { get; set; }
 
         [JsonPropertyName("utm_term")]
-        public string UtmTerm { get; set; }
+        public string? UtmTerm { get; set; }
 
         [JsonPropertyName("utm_id")]
-        public string UtmId { get; set; }
+        public string? UtmId { get; set; }
 
         [JsonPropertyName("fbclid")]
-        public string Fbclid { get; set; }
+        public string? Fbclid { get; set; }
 
+        // ✅ Google Ads
+        [JsonPropertyName("gclid")]
+        public string? Gclid { get; set; }
+
+        // Afiliado
         [JsonPropertyName("sub1")]
-        public string Sub1 { get; set; }
+        public string? Sub1 { get; set; }
     }
 
     public class UtmCommission

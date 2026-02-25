@@ -439,7 +439,7 @@ namespace Service
                     utmrepository.Status = "paid";
                     await _utmRepository.Update(utmrepository);
 
-                    _ = _utmfyService.SendEvent(utmrepository);
+                    await _utmfyService.SendEvent(utmrepository);
                 }
             }
         }
@@ -759,18 +759,44 @@ namespace Service
 
         public async Task RecordUtm(Utm utm)
         {
-            await _utmfyService.SendEvent(utm);
+            Console.WriteLine($"🔄 Processando UTM | OrderId: {utm.OrderId} | Status: {utm.Status}");
 
             var utmrepository = await _utmRepository.GetByOrderId(utm.OrderId);
+
             if (utmrepository == null)
-                await _utmRepository.Add(utm);
+            {
+                Console.WriteLine($"🆕 Nova UTM | OrderId: {utm.OrderId}");
+                utmrepository = utm;
+
+                await _utmRepository.Add(utmrepository);
+            }
             else
             {
                 utmrepository.Status = utm.Status;
                 utmrepository.ApprovedDate = utm.ApprovedDate;
 
+                if (utmrepository.TrackingParameters == null)
+                    utmrepository.TrackingParameters = utm.TrackingParameters;
+                else if (utm.TrackingParameters != null)
+                {
+                    utmrepository.TrackingParameters.Gclid ??= utm.TrackingParameters.Gclid;
+                    utmrepository.TrackingParameters.Fbclid ??= utm.TrackingParameters.Fbclid;
+                    utmrepository.TrackingParameters.UtmSource ??= utm.TrackingParameters.UtmSource;
+                    utmrepository.TrackingParameters.UtmMedium ??= utm.TrackingParameters.UtmMedium;
+                    utmrepository.TrackingParameters.UtmCampaign ??= utm.TrackingParameters.UtmCampaign;
+                    utmrepository.TrackingParameters.UtmContent ??= utm.TrackingParameters.UtmContent;
+                    utmrepository.TrackingParameters.UtmTerm ??= utm.TrackingParameters.UtmTerm;
+                    utmrepository.TrackingParameters.UtmId ??= utm.TrackingParameters.UtmId;
+                    utmrepository.TrackingParameters.Sub1 ??= utm.TrackingParameters.Sub1;
+                }
+
                 await _utmRepository.Update(utmrepository);
             }
+
+            // 🔥 ENVIA O OBJETO CONSOLIDADO
+            var utmifyResponse = await _utmfyService.SendEvent(utmrepository);
+
+            Console.WriteLine($"📡 UTMIFY RESPONSE | OrderId: {utm.OrderId} | {utmifyResponse}");
         }
     }
 }

@@ -756,18 +756,28 @@ namespace API.Controllers
         {
             try
             {
+                if (utm == null || string.IsNullOrEmpty(utm.OrderId))
+                    return BadRequest(new { message = "OrderId obrigatório" });
+
                 var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "IP não disponível";
 
-                if (utm?.Customer != null)
+                if (utm.Customer != null)
                     utm.Customer.Ip = clientIp;
 
-                await _campaignService.RecordUtm(utm!);
+                Console.WriteLine($"📥 UTM RECEBIDA | OrderId: {utm.OrderId} | Status: {utm.Status}");
 
-                return Ok();
+                await _campaignService.RecordUtm(utm);
+
+                Console.WriteLine($"✅ UTM PROCESSADA | OrderId: {utm.OrderId}");
+
+                return Ok(new { success = true });
             }
             catch (Exception ex)
             {
-                return BadRequest(JsonConvert.SerializeObject(new { message = ex.Message }));
+                Console.WriteLine($"❌ ERRO UTM | OrderId: {utm?.OrderId} | {ex.Message}");
+                SentrySdk.CaptureException(ex);
+
+                return BadRequest(new { message = ex.Message });
             }
         }
     }

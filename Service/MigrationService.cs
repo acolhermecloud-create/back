@@ -91,7 +91,7 @@ namespace Service
 
                 var kaixinhaOrange = new Plan(
                     "🍊 Plano Orange", 
-                    "O Plano Orange é uma solução abrangente projetada para maximizar a visibilidade e engajamento de sua Kaixinha, utilizando estratégias de divulgação adaptadas para as principais plataformas de redes sociais.",
+                    "O Plano Orange é uma solução abrangente projetada para maximizar a visibilidade e engajamento de sua Campanha, utilizando estratégias de divulgação adaptadas para as principais plataformas de redes sociais.",
                     benefitsOrange, 
                     Convert.ToDecimal(20.0),
                     Convert.ToDecimal(0), 

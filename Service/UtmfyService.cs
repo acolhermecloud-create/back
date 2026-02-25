@@ -1,6 +1,8 @@
 ﻿using Domain;
 using Domain.Interfaces.Services;
+using iugu.net.Response;
 using Microsoft.Extensions.Configuration;
+using Sentry.Protocol;
 using System.Text;
 using System.Text.Json;
 
@@ -16,28 +18,51 @@ namespace Service
 
         public async Task<string> SendEvent(Utm utm)
         {
-            if (string.IsNullOrEmpty(_apiToken))
-                throw new Exception("API token não definido.");
-
-            var json = JsonSerializer.Serialize(utm, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-
-            var request = new HttpRequestMessage(HttpMethod.Post, _apiUrl)
+            try
             {
-                Content = new StringContent(json, Encoding.UTF8, "application/json")
-            };
+                if (string.IsNullOrEmpty(_apiToken))
+                    throw new Exception("API token não definido.");
 
-            request.Headers.Add("x-api-token", _apiToken);
+                var json = JsonSerializer.Serialize(
+                    utm,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
 
-            var response = await _httpClient.SendAsync(request);
+                Console.WriteLine($"📤 UTMIFY SEND | OrderId: {utm.OrderId}");
+                Console.WriteLine($"📦 PAYLOAD: {json}");
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var error = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("Erro Utmify: " + error);
-                SentrySdk.CaptureException(new Exception(error));
+                var request = new HttpRequestMessage(HttpMethod.Post, _apiUrl)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json")
+                };
+
+                request.Headers.Add("x-api-token", _apiToken);
+
+                var response = await _httpClient.SendAsync(request);
+                var responseContent = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"📥 UTMIFY STATUS: {(int)response.StatusCode}");
+                Console.WriteLine($"📥 UTMIFY RESPONSE: {responseContent}");
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    var responseMsg = $"Erro Utmify | Status: {(int)response.StatusCode} | {responseContent}";
+                    Console.WriteLine($"❌ {responseMsg}");
+                    SentrySdk.CaptureException(new Exception(responseMsg));
+
+                    return responseMsg;
+                }
+
+                return responseContent;
             }
-
-            return await response.Content.ReadAsStringAsync();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ {ex.Message}");
+                var errorMessage = $"Erro Utmify | Status: 400 | {ex.Message}";
+                return errorMessage;
+            }
         }
     }
 }
