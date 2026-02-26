@@ -416,6 +416,7 @@ namespace Service
                 await _campaignLogsRepository.Add(log);
 
                 var campaignrepo = await _campaignRepository.GetById((Guid)donationrepo.CampaignId);
+                campaignrepo.UpdateAt = DateTime.Now;
                 var currentPlan = await _planRepository.GetById(campaignrepo.PlanId);
 
                 decimal amountToBeDivided = donationrepo.Value / 100m;
@@ -441,6 +442,8 @@ namespace Service
 
                     await _utmfyService.SendEvent(utmrepository);
                 }
+
+                await _campaignRepository.Update(campaignrepo);
             }
         }
 
@@ -570,8 +573,26 @@ namespace Service
             return await _categoryRepository.GetAll();
         }
 
-        public async Task<Campaign> GetBySlug(string slug)
+        public async Task<Campaign?> GetBySlug(string slug)
         {
+            string cacheKey = $"campaign:slug:{slug}";
+
+            // consulta leve só com UpdatedAt
+            var campaignMeta = await _campaignRepository.GetBySlug(slug);
+            if (campaignMeta == null)
+                return null;
+
+            var cached = await _cacheService.Get(cacheKey);
+
+            if (!string.IsNullOrEmpty(cached))
+            {
+                var cachedCampaign = JsonConvert.DeserializeObject<Campaign>(cached);
+
+                if (cachedCampaign.UpdateAt == campaignMeta.UpdateAt)
+                    return cachedCampaign;
+            }
+
+            // carrega completo
             var campaignrepo = await _campaignRepository.GetBySlug(slug);
             if (campaignrepo == null)
                 return null;
@@ -582,7 +603,13 @@ namespace Service
             campaignrepo.Comments = await _campaignCommentsRepository.ListByCampaignId(campaignrepo.Id);
 
             foreach (var comment in campaignrepo.Comments)
-                comment.UserName = (await _userService.GetById(comment.UserId)).Name;
+                comment.UserName = (await _userService.GetById(comment.UserId))?.Name ?? "Anônimo";
+
+            // salva cache sempre
+            var json = JsonConvert.SerializeObject(campaignrepo);
+
+            // TTL pode ser maior agora porque você valida por UpdatedAt
+            await _cacheService.Set(cacheKey, json, 72);
 
             return campaignrepo;
         }
@@ -617,6 +644,13 @@ namespace Service
             CampaignComments comment = new(campaignId, userId, message, DateTime.Now);
 
             await _campaignCommentsRepository.Add(comment);
+
+            var campaign = await _campaignRepository.GetById(campaignId);
+            if(campaign != null)
+            {
+                campaign.UpdateAt = DateTime.Now;
+                await _campaignRepository.Update(campaign);
+            }
         }
 
         public async Task RemoveComment(Guid commentId)

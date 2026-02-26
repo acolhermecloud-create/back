@@ -254,6 +254,7 @@ namespace Service
                     comentarioCount++;
                 }
 
+                campaignRepo.UpdateAt = DateTime.Now;
                 await _campaignRepository.Update(campaignRepo);
             }
         }
