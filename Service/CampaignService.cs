@@ -28,7 +28,8 @@ namespace Service
         IEmailService emailService,
         ICacheService cacheService,
         IUtmRepository utmRepository,
-        IUtmfyService utmfyService) : ICampaignService
+        IUtmfyService utmfyService,
+        IBackgroundTaskQueue queue) : ICampaignService
     {
         private readonly ICampaignRepository _campaignRepository = campaignRepository;
         private readonly ICampaignDonationRepository _campaignDonationRepository = campaignDonationRepository;
@@ -53,6 +54,8 @@ namespace Service
         private readonly IEmailService _emailService = emailService;
 
         private readonly IUtmRepository _utmRepository = utmRepository;
+
+        private readonly IBackgroundTaskQueue _queue = queue;
 
         public async Task<Campaign> Create(string title, string description, decimal goal, string beneficiaryName, CampaignisForWho forWho,
             DateTime dueDate, Guid categoryId, Guid userId, Dictionary<Stream, string> FilesAndExtensions)
@@ -444,6 +447,11 @@ namespace Service
                 }
 
                 await _campaignRepository.Update(campaignrepo);
+
+                _queue.Enqueue(async ct =>
+                {
+                    await GetBySlug(campaignrepo.Slug);
+                });
             }
         }
 

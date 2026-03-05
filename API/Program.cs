@@ -224,6 +224,9 @@ namespace API
             builder.Services.AddHostedService<BankJob>();
             builder.Services.AddHostedService<CampaignJob>();
 
+            builder.Services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+            builder.Services.AddHostedService<CacheWorker>();
+
             // HINGFIRE
             builder.Services.AddHangfire(config =>
             {
