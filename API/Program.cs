@@ -29,7 +29,7 @@ namespace API
         {
 
             string? envEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            string settingFile = string.Empty;
+            string settingFile = "appsettings.json";
 
             if (envEnvironment == null)
                 settingFile = "appsettings.Development.json";

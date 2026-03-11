@@ -1,0 +1,32 @@
+---
+name: Acolher CI/CD main
+on:
+  push:
+    branches:
+      - main
+      
+jobs:
+  build-main:
+    name: Build main
+    if: contains (github.ref, 'main')
+    runs-on:
+      - self-hosted
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v3
+    - name: Build image
+      run: |
+        docker build -t acolher-backend-main .
+  deploy-main:
+    name: Deploy main
+    if: contains (github.ref, 'main')
+    runs-on:
+      - self-hosted
+    needs: build-main
+    steps:
+    - name: Stop old container
+      run: docker stop acolher-backend-main || true
+    - name: Remove old container
+      run: docker rm acolher-backend-main || true
+    - name: Run new container
+      run: docker run -d -p 172.17.0.1:8080:8080 --restart unless-stopped --name acolher-backend-main acolher-backend-main
