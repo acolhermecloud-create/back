@@ -31,14 +31,14 @@ namespace API
             string? envEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             string settingFile = "appsettings.json";
 
-            if (envEnvironment == null)
-                settingFile = "appsettings.Development.json";
-            else if (envEnvironment == "Development")
-                settingFile = "appsettings.Development.json";
-            else if (envEnvironment == "PreRelease")
-                settingFile = "appsettings.PreRelease.json";
-            else if (envEnvironment == "Production")
-                settingFile = "appsettings.json";
+            //if (envEnvironment == null)
+            //    settingFile = "appsettings.Development.json";
+            //else if (envEnvironment == "Development")
+            //    settingFile = "appsettings.Development.json";
+            //else if (envEnvironment == "PreRelease")
+            //    settingFile = "appsettings.PreRelease.json";
+            //else if (envEnvironment == "Production")
+            //    settingFile = "appsettings.json";
 
             var builder = WebApplication.CreateBuilder(args);
 
