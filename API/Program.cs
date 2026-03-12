@@ -102,7 +102,9 @@ namespace API
                             builder.WithOrigins("https://front-a01031611408.vercel.app", "https://admin-a01031611408.vercel.app", "https://acolher.io", "https://www.acolher.io");
                         }
 
-                        builder.AllowAnyMethod().AllowAnyHeader();
+                        builder.AllowAnyOrigin()
+                       .AllowAnyHeader()
+                       .AllowAnyMethod();
                     });
             });
 
@@ -267,6 +269,7 @@ namespace API
 
             app.UseCors("AllowSpecificOrigin");
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseHangfireDashboard("/trigger");
