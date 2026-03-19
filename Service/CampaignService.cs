@@ -29,7 +29,8 @@ namespace Service
         ICacheService cacheService,
         IUtmRepository utmRepository,
         IUtmfyService utmfyService,
-        IBackgroundTaskQueue queue) : ICampaignService
+        IBackgroundTaskQueue queue,
+        IFacebookPixelService facebookPixelService) : ICampaignService
     {
         private readonly ICampaignRepository _campaignRepository = campaignRepository;
         private readonly ICampaignDonationRepository _campaignDonationRepository = campaignDonationRepository;
@@ -52,6 +53,7 @@ namespace Service
 
         private readonly IBankService _bankService = bankService;
         private readonly IEmailService _emailService = emailService;
+        private readonly IFacebookPixelService _facebookPixelService = facebookPixelService;
 
         private readonly IUtmRepository _utmRepository = utmRepository;
 
@@ -436,9 +438,17 @@ namespace Service
                     percentToCharge,
                     fixedRate);
 
+                
                 var utmrepository = await _utmRepository.GetByOrderId(transactionId);
                 if(utmrepository != null)
                 {
+                    await _facebookPixelService.SendEventToFacebookAsync(
+                        _configuration["Facebook:PixelId"]!, 
+                        _configuration["Facebook:AccessToken"]!, 
+                        "Purchase", 
+                        transactionId, 
+                        utmrepository);
+
                     utmrepository.ApprovedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     utmrepository.Status = "paid";
                     await _utmRepository.Update(utmrepository);
