@@ -446,7 +446,7 @@ namespace Service
                         _configuration["Facebook:PixelId"]!, 
                         _configuration["Facebook:AccessToken"]!, 
                         "Purchase", 
-                        transactionId, 
+                        $"purchase_{transactionId}",
                         utmrepository);
 
                     utmrepository.ApprovedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");

@@ -13,7 +13,7 @@ namespace Service
         private readonly HttpClient _httpClient = httpClient;
         private readonly IConfiguration _configuration = configuration;
 
-        public async Task<bool> SendEventToFacebookAsync(string pixelId, string accessToken, string eventName, string transactionId, Utm eventParams)
+        public async Task<bool> SendEventToFacebookAsync(string pixelId, string accessToken, string eventName, string eventId, Utm eventParams)
         {
             var apiUrl = $"https://graph.facebook.com/v21.0/{pixelId}/events?access_token={accessToken}";
 
@@ -29,7 +29,7 @@ namespace Service
                     {
                         event_name = eventName,
                         event_time = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                        event_id = HashData(transactionId),
+                        event_id = HashData(eventId),
                         action_source = "website",
 
                         user_data = new
@@ -94,9 +94,19 @@ namespace Service
 
         private string HashData(string data)
         {
+            if (string.IsNullOrWhiteSpace(data))
+                return null;
+
+            var normalized = data
+                .Trim()
+                .ToLowerInvariant();
+
             using var sha256 = SHA256.Create();
-            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(data));
-            return BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+            var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(normalized));
+
+            return BitConverter.ToString(bytes)
+                .Replace("-", "")
+                .ToLowerInvariant();
         }
 
         private string GenerateFbp()
