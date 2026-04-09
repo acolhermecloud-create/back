@@ -379,7 +379,7 @@ namespace Service
                 <body style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;'>
                     <div style='background-color: #ffffff; padding: 30px; border-radius: 8px; max-width: 600px; margin: auto;'>
                         <div style='text-align: center; margin-bottom: 20px;'>
-                            <img src='https://www.kaixinha.io/_next/static/media/logo0.4bb15040.png' alt='Company Logo' style='height: 60px;' />
+                            <img src='https://www.acolher.io/_next/static/media/logo0.4bb15040.png' alt='Company Logo' style='height: 60px;' />
                         </div>
 
                         <h2>Olá, <span style='color: #ff6700;'>{name}</span>!</h2>
@@ -403,8 +403,7 @@ namespace Service
             string businessAddresses = _configuration["Mail:SenderEmail"];
             string businessName = _configuration["Mail:SenderName"];
 
-            await _emailService.Send(receivers, title, htmlBody, businessAddresses,
-                businessName, null);
+            //await _emailService.Send(receivers, title, htmlBody, businessAddresses, businessName, null);
         }
 
         public async Task ConfirmDonation(string transactionId)
@@ -442,12 +441,18 @@ namespace Service
                 var utmrepository = await _utmRepository.GetByOrderId(transactionId);
                 if(utmrepository != null)
                 {
-                    await _facebookPixelService.SendEventToFacebookAsync(
-                        _configuration["Facebook:PixelId"]!, 
-                        _configuration["Facebook:AccessToken"]!, 
-                        "Purchase", 
-                        $"purchase_{transactionId}",
-                        utmrepository);
+                    var eventCache = await _cacheService.Get($"purchase_{transactionId}");
+                    if(eventCache == null)
+                    {
+                        await _cacheService.Set($"purchase_{transactionId}", transactionId, 24);
+
+                        await _facebookPixelService.SendEventToFacebookAsync(
+                            _configuration["Facebook:PixelId"]!,
+                            _configuration["Facebook:AccessToken"]!,
+                            "Purchase",
+                            $"purchase_{transactionId}",
+                            utmrepository);
+                    }
 
                     utmrepository.ApprovedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     utmrepository.Status = "paid";
