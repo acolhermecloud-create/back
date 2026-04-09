@@ -444,6 +444,8 @@ namespace Service
                     var eventCache = await _cacheService.Get($"purchase_{transactionId}");
                     if(eventCache == null)
                     {
+                        Console.WriteLine($"Enviando evento: {$"purchase_{transactionId}"}");
+
                         await _cacheService.Set($"purchase_{transactionId}", transactionId, 24);
 
                         await _facebookPixelService.SendEventToFacebookAsync(
@@ -452,6 +454,8 @@ namespace Service
                             "Purchase",
                             $"purchase_{transactionId}",
                             utmrepository);
+
+                        Console.WriteLine($"Evento enviado: {$"purchase_{transactionId}"}");
                     }
 
                     utmrepository.ApprovedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
