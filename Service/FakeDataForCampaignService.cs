@@ -202,6 +202,9 @@ namespace Service
             var campaignRepo = await _campaignRepository.GetBySlug(slug);
             campaignRepo.CanReceiveDonation = allowDonations;
 
+            var randomCreated = new Random();
+            campaignRepo.CreatedAt = DateTime.Now.AddMonths(-3).AddDays(-randomCreated.Next(1, 16));
+
             int minRange = 2542;
             int maxRange = 38281;
 
